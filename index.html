@@ -19,8 +19,7 @@
   .header .ring{position:absolute;width:160px;height:160px;right:-50px;top:-60px;border:10px solid var(--navy-light);opacity:.5;border-radius:50%;}
   .brand{display:flex;align-items:center;justify-content:space-between;position:relative;}
   .brand-name{color:#fff;font-weight:900;font-size:16px;letter-spacing:-.2px;}
-  .brand-plus{color:var(--orange);}
-  .anchor-badge{width:30px;height:30px;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .anchor-badge{width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
   .header-sub{position:relative;margin-top:18px;}
   .header-eyebrow{color:var(--orange);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:0;}
   .header-date{color:#fff;font-size:20px;font-weight:700;margin:2px 0 0;text-transform:capitalize;}
@@ -240,7 +239,7 @@ function render(){
     <div class="header">
       <div class="ring"></div>
       <div class="brand">
-        <div><span class="brand-name">KUEHNE</span><span class="brand-name brand-plus"> + </span><span class="brand-name">NAGEL</span></div>
+        <div><span class="brand-name">KUEHNE</span><span class="brand-name"> + </span><span class="brand-name">NAGEL</span></div>
         <div class="anchor-badge">${anchorIcon()}</div>
       </div>
       <div class="header-sub">
@@ -271,7 +270,14 @@ function render(){
 }
 
 function anchorIcon(){
-  return `<svg class="ic" style="width:14px;height:14px;stroke:#fff" viewBox="0 0 24 24"><path d="M12 6v16"/><path d="m19 13 2-1a9 9 0 0 1-18 0l2 1"/><path d="M12 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="#fff" stroke="none"/></svg>`;
+  return `<svg width="34" height="34" viewBox="0 0 100 100">
+    <path d="M 25.9 84.4 A 42 42 0 1 1 74.1 84.4" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="50" cy="33" r="7" fill="none" stroke="#fff" stroke-width="6.5"/>
+    <line x1="50" y1="40" x2="50" y2="73" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <line x1="35" y1="49" x2="65" y2="49" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 50 73 C 50 90, 27 92, 23 75" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 50 73 C 50 90, 73 92, 77 75" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  </svg>`;
 }
 
 /* ------------------------------ Home tab ------------------------------ */
