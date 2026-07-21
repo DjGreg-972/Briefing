@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Kuehne+Nagel · Suivi de production</title>
+<style>
+  :root{
+    --navy:#0F1D4D; --navy-deep:#0A1538; --navy-light:#1E3B7A; --navy-lighter:#3457A6;
+    --orange:#F5A623; --orange-deep:#D98C0F; --bg:#F2F4FA; --card:#FFFFFF;
+    --text:#12204F; --text-muted:#6C7590; --border:#E3E7F3; --green:#1C9A5B; --red:#D14343;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:var(--text);}
+  #app{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  .header{background:var(--navy);padding:20px 20px 26px;position:relative;overflow:hidden;}
+  .header .ring{position:absolute;width:160px;height:160px;right:-50px;top:-60px;border:10px solid var(--navy-light);opacity:.5;border-radius:50%;}
+  .brand{display:flex;align-items:center;justify-content:space-between;position:relative;}
+  .brand-name{color:#fff;font-weight:900;font-size:16px;letter-spacing:-.2px;}
+  .brand-plus{color:var(--orange);}
+  .anchor-badge{width:30px;height:30px;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .header-sub{position:relative;margin-top:18px;}
+  .header-eyebrow{color:var(--orange);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:0;}
+  .header-date{color:#fff;font-size:20px;font-weight:700;margin:2px 0 0;text-transform:capitalize;}
+  .body{flex:1;padding:16px;padding-bottom:96px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,29,77,.04);}
+  .section-title{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .plus-badge{width:20px;height:20px;border-radius:50%;background:var(--orange);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .section-title h2{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--navy);margin:0;}
+
+  /* hero */
+  .hero{background:var(--navy);border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+  .hero .ring{position:absolute;width:140px;height:140px;right:-40px;bottom:-60px;border:8px solid var(--navy-light);opacity:.35;border-radius:50%;}
+  .hero-row{display:flex;align-items:flex-start;justify-content:space-between;position:relative;}
+  .hero-label{color:#9fb0e0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:0;}
+  .hero-total{display:flex;align-items:baseline;gap:8px;margin-top:4px;}
+  .hero-total .num{color:#fff;font-weight:900;font-size:44px;line-height:1;}
+  .hero-total .unit{color:#9fb0e0;font-size:13px;font-weight:600;}
+  .hero-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.12);margin-top:8px;}
+  .streak-box{display:flex;flex-direction:column;align-items:center;background:rgba(245,166,35,.15);border-radius:14px;padding:8px 12px;}
+  .streak-box .n{color:#fff;font-weight:900;font-size:18px;line-height:1.1;margin-top:2px;}
+  .streak-box .lbl{color:var(--orange);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* production rows */
+  .prod-head{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 2px 6px;}
+  .prod-head span{font-size:11px;font-weight:600;color:var(--text-muted);text-align:center;}
+  .prod-head span:first-child{text-align:left;}
+  .prod-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;margin-bottom:10px;}
+  .prod-row .lbl b{display:block;font-size:14px;font-weight:700;color:var(--text);}
+  .prod-row .lbl small{font-size:11px;color:var(--text-muted);}
+  .num-field{width:100%;text-align:center;font-size:17px;font-weight:700;border-radius:12px;padding:8px 4px;background:var(--bg);color:var(--text);border:1px solid var(--border);}
+  .hint{font-size:11px;color:var(--text-muted);margin-top:6px;}
+
+  /* tasks */
+  .card-head-flex{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+  .done-count{font-size:12px;font-weight:700;color:var(--navy);}
+  .cat-block{margin-bottom:16px;}
+  .cat-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .cat-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--navy-light);}
+  .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;}
+  .task-row{position:relative;border-radius:12px;overflow:hidden;margin-bottom:6px;}
+  .task-reveal{position:absolute;inset:0;display:flex;align-items:center;padding:0 12px;}
+  .task-inner{position:relative;display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg);touch-action:pan-y;transition:transform .2s ease;}
+  .checkbox{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+  .checkbox.done{background:var(--green);border-color:var(--green);}
+  .task-text{flex:1;font-size:14px;user-select:none;}
+  .task-text.done{color:var(--text-muted);text-decoration:line-through;}
+  .row-input{flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid var(--border);color:var(--text);}
+  .add-row{display:flex;gap:8px;margin-top:8px;}
+  .btn-square{width:34px;height:34px;border-radius:12px;background:var(--navy);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+  .add-cat-btn{width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1.5px dashed var(--navy-lighter);background:none;color:var(--navy);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;}
+  .empty-note{font-size:13px;color:var(--text-muted);margin-bottom:10px;}
+
+  /* history */
+  .insight{background:var(--navy);border-radius:16px;padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+  .insight .ico{width:28px;height:28px;border-radius:50%;background:rgba(245,166,35,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .insight p{color:#fff;font-size:13px;line-height:1.4;margin:0;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .chip{font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;}
+  .chip.active{color:#fff;border-color:transparent;}
+  .chart-empty{display:flex;flex-direction:column;align-items:center;padding:26px 0;color:var(--text-muted);font-size:12px;text-align:center;}
+  .select-cat{font-size:11px;font-weight:700;border-radius:8px;padding:5px 8px;border:1px solid var(--border);color:var(--text);background:var(--bg);}
+
+  /* nav */
+  .navbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;pointer-events:none;}
+  .navbar-inner{display:flex;gap:8px;margin-bottom:16px;padding:8px;border-radius:16px;background:var(--navy);pointer-events:auto;max-width:460px;width:calc(100% - 32px);box-shadow:0 8px 20px rgba(15,29,77,.3);}
+  .nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:none;background:transparent;color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+  .nav-btn.active{background:var(--orange);}
+  svg.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;display:block;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------------------------------------------------------------------- */
+/* Utilities                                                               */
+/* ---------------------------------------------------------------------- */
+const FR_MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const FR_DAYS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+const ROWS_DEFS = [
+  { key:"J", label:"Restant à faire J", sub:"Aujourd'hui" },
+  { key:"J1", label:"Journée J+1", sub:"Demain" },
+  { key:"nonPlanifiees", label:"Non planifiées", sub:"Hors planning" },
+];
+const SERIES_DEFS = [
+  { key:"J_hetero", label:"J · Hétéro", color:"var(--navy)" },
+  { key:"J_homo", label:"J · Homo", color:"var(--navy-lighter)" },
+  { key:"J1_hetero", label:"J+1 · Hétéro", color:"var(--orange)" },
+  { key:"J1_homo", label:"J+1 · Homo", color:"var(--orange-deep)" },
+  { key:"N_hetero", label:"Non plan. · Hétéro", color:"var(--green)" },
+  { key:"N_homo", label:"Non plan. · Homo", color:"var(--red)" },
+];
+const SERIES_HEX = { "var(--navy)":"#0F1D4D","var(--navy-lighter)":"#3457A6","var(--orange)":"#F5A623","var(--orange-deep)":"#D98C0F","var(--green)":"#1C9A5B","var(--red)":"#D14343" };
+
+function fmtDateKey(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
+function fmtDateHuman(d){ return `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
+function getISOWeek(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return `${date.getUTCFullYear()}-S${String(weekNo).padStart(2,"0")}`;
+}
+function getMonthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+function emptyRows(){ return { J:{hetero:"",homo:""}, J1:{hetero:"",homo:""}, nonPlanifiees:{hetero:"",homo:""} }; }
+function rowsTotal(rows){ return ["J","J1","nonPlanifiees"].reduce((s,k)=> s + (Number(rows[k]?.hetero)||0) + (Number(rows[k]?.homo)||0), 0); }
+function trendStatus(delta, base){
+  if(base===null) return { color:"var(--text-muted)", label:"Première mesure", arrow:"minus" };
+  if(delta<0) return { color:"var(--green)", label:"En baisse", arrow:"down" };
+  if(delta===0) return { color:"var(--navy-lighter)", label:"Stable", arrow:"minus" };
+  const pct = base>0 ? delta/base : 1;
+  if(pct<0.15) return { color:"var(--orange)", label:"Légère hausse", arrow:"up" };
+  return { color:"var(--red)", label:"En hausse", arrow:"up" };
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* localStorage helpers (namespaced, JSON) */
+const LS = {
+  get(key){ try{ const v = localStorage.getItem(key); return v===null ? null : JSON.parse(v); }catch(e){ return null; } },
+  set(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.error("storage set failed", e); } },
+  keys(prefix){ const out=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!prefix || k.startsWith(prefix)) out.push(k); } return out; }
+};
+
+/* tiny inline icon set (generic, hand-drawn — not copying any brand's icon library) */
+const ICONS = {
+  plus:  `<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`,
+  check: `<svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>`,
+  x:     `<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
+  trash: `<svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>`,
+  home:  `<svg class="ic" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>`,
+  chart: `<svg class="ic" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>`,
+  flame: `<svg class="ic" viewBox="0 0 24 24" fill="var(--orange)" stroke="none"><path d="M12 2c1 4-3 5-3 9a3 3 0 0 0 6 0c1-1 1-3 0-4 2 1 3 3 3 5a6 6 0 0 1-12 0c0-5 4-6 6-10z"/></svg>`,
+  up:    `<svg class="ic" viewBox="0 0 24 24"><path d="M4 17 10 11l4 4 6-8"/><path d="M20 7v6M14 13v0"/></svg>`,
+  down:  `<svg class="ic" viewBox="0 0 24 24"><path d="M4 7l6 6 4-4 6 8"/><path d="M20 17v-6M14 11v0"/></svg>`,
+  minus: `<svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>`,
+  spark: `<svg class="ic" viewBox="0 0 24 24" fill="var(--orange)" stroke="none"><path d="M12 2l1.8 5.6L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.4z"/></svg>`,
+};
+
+/* ---------------------------------------------------------------------- */
+/* State                                                                   */
+/* ---------------------------------------------------------------------- */
+const today = new Date();
+const todayKey = fmtDateKey(today);
+const yesterdayKey = fmtDateKey(new Date(Date.now() - 86400000));
+
+let state = {
+  tab: "home",
+  rows: LS.get(`kn_prod_${todayKey}`) || emptyRows(),
+  yesterdayRows: LS.get(`kn_prod_${yesterdayKey}`),
+  categories: LS.get("kn_categories") || [],
+  tasks: LS.get("kn_tasks") || [],
+  doneToday: {},
+  showAddCat: false,
+  rangeDays: 14,
+  groupMode: "week",
+  catFilter: "all",
+  activeSeries: {},
+};
+SERIES_DEFS.forEach((s,i) => state.activeSeries[s.key] = i < 2);
+(LS.get(`kn_completions_${todayKey}`) || []).forEach(id => state.doneToday[id] = true);
+
+function saveRows(){ LS.set(`kn_prod_${todayKey}`, state.rows); }
+function saveCategories(){ LS.set("kn_categories", state.categories); }
+function saveTasks(){ LS.set("kn_tasks", state.tasks); }
+function saveCompletions(){ LS.set(`kn_completions_${todayKey}`, Object.keys(state.doneToday).filter(k=>state.doneToday[k])); }
+
+function logCompletionEvent(task, isDone){
+  const log = LS.get("kn_completion_log") || [];
+  if(isDone){
+    log.push({ date: todayKey, taskId: task.id, categoryId: task.categoryId, text: task.text });
+  } else {
+    const idx = log.findLastIndex ? log.findLastIndex(e => e.date===todayKey && e.taskId===task.id)
+                                   : (() => { for(let i=log.length-1;i>=0;i--){ if(log[i].date===todayKey && log[i].taskId===task.id) return i; } return -1; })();
+    if(idx>-1) log.splice(idx,1);
+  }
+  LS.set("kn_completion_log", log);
+}
+
+/* streak: consecutive days (ending today) with >=1 completed task */
+function computeStreak(){
+  const activeToday = Object.values(state.doneToday).some(Boolean);
+  const compKeys = LS.keys("kn_completions_");
+  const pastActive = new Set();
+  compKeys.forEach(k => {
+    const dateStr = k.replace("kn_completions_", "");
+    if(dateStr === todayKey) return;
+    const arr = LS.get(k) || [];
+    if(arr.length>0) pastActive.add(dateStr);
+  });
+  let count = 0;
+  const cursor = new Date(today);
+  if(!activeToday) cursor.setDate(cursor.getDate()-1);
+  for(let i=0;i<400;i++){
+    const key = fmtDateKey(cursor);
+    const active = key===todayKey ? activeToday : pastActive.has(key);
+    if(!active) break;
+    count++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Rendering                                                               */
+/* ---------------------------------------------------------------------- */
+const app = document.getElementById("app");
+
+function render(){
+  const doneCount = state.tasks.filter(t => state.doneToday[t.id]).length;
+  const todayTotal = rowsTotal(state.rows);
+  const yTotal = state.yesterdayRows ? rowsTotal(state.yesterdayRows) : null;
+  const delta = yTotal===null ? null : todayTotal - yTotal;
+  const status = trendStatus(delta, yTotal);
+  const streak = computeStreak();
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="ring"></div>
+      <div class="brand">
+        <div><span class="brand-name">KUEHNE</span><span class="brand-name brand-plus"> + </span><span class="brand-name">NAGEL</span></div>
+        <div class="anchor-badge">${anchorIcon()}</div>
+      </div>
+      <div class="header-sub">
+        <p class="header-eyebrow">Suivi de production</p>
+        <p class="header-date">${fmtDateHuman(today)}</p>
+      </div>
+    </div>
+    <div class="body">
+      <div id="tabContent"></div>
+    </div>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <button class="nav-btn ${state.tab==='home'?'active':''}" data-nav="home">${ICONS.home} Accueil</button>
+        <button class="nav-btn ${state.tab==='history'?'active':''}" data-nav="history">${ICONS.chart} Historique</button>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll("[data-nav]").forEach(btn => {
+    btn.addEventListener("click", () => { state.tab = btn.dataset.nav; render(); });
+  });
+
+  if(state.tab === "home"){
+    renderHome({ doneCount, todayTotal, delta, status, streak });
+  } else {
+    renderHistory();
+  }
+}
+
+function anchorIcon(){
+  return `<svg class="ic" style="width:14px;height:14px;stroke:#fff" viewBox="0 0 24 24"><path d="M12 6v16"/><path d="m19 13 2-1a9 9 0 0 1-18 0l2 1"/><path d="M12 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="#fff" stroke="none"/></svg>`;
+}
+
+/* ------------------------------ Home tab ------------------------------ */
+function renderHome({ doneCount, todayTotal, delta, status, streak }){
+  const container = document.getElementById("tabContent");
+  container.innerHTML = `
+    <div class="hero">
+      <div class="ring"></div>
+      <div class="hero-row">
+        <div>
+          <p class="hero-label">Total palettes restantes</p>
+          <div class="hero-total"><span class="num">${todayTotal}</span><span class="unit">palettes</span></div>
+          <div class="hero-badge" style="color:${status.color}">
+            ${ICONS[status.arrow]}
+            ${delta===null ? status.label : `${delta>0?'+':''}${delta} vs hier`}
+          </div>
+        </div>
+        ${streak>0 ? `
+          <div class="streak-box">
+            ${ICONS.flame}
+            <span class="n">${streak}</span>
+            <span class="lbl">${streak>1?'jours':'jour'}</span>
+          </div>` : ""}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="plus-badge">+</span><h2>Palettes restantes</h2></div>
+      <div class="prod-head"><span></span><span>Hétérogène</span><span>Homogène</span></div>
+      ${ROWS_DEFS.map(r => `
+        <div class="prod-row">
+          <div class="lbl"><b>${r.label}</b><small>${r.sub}</small></div>
+          <input class="num-field" type="number" inputmode="numeric" min="0" placeholder="0"
+                 id="in-${r.key}-hetero" value="${state.rows[r.key].hetero}" data-row="${r.key}" data-field="hetero" />
+          <input class="num-field" type="number" inputmode="numeric" min="0" placeholder="0"
+                 id="in-${r.key}-homo" value="${state.rows[r.key].homo}" data-row="${r.key}" data-field="homo" />
+        </div>
+      `).join("")}
+      <p class="hint">Historisé chaque jour pour alimenter le graphique.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-head-flex">
+        <div class="section-title"><span class="plus-badge">+</span><h2>Tâches du jour</h2></div>
+        <span class="done-count">${doneCount}/${state.tasks.length}</span>
+      </div>
+      ${state.categories.length===0 ? `<p class="empty-note">Aucune catégorie pour l'instant. Ajoutez-en une pour commencer.</p>` : ""}
+      <div id="catList"></div>
+      ${state.showAddCat ? `
+        <div class="add-row">
+          <input class="row-input" id="newCatInput" placeholder="Nom de la catégorie…" autofocus />
+          <button class="btn-square" id="confirmAddCat" style="background:var(--orange)">${ICONS.check}</button>
+          <button class="btn-square" id="cancelAddCat" style="background:var(--bg)">${withColor(ICONS.x,'var(--text-muted)')}</button>
+        </div>
+      ` : `<button class="add-cat-btn" id="showAddCat">${ICONS.plus} Ajouter une catégorie</button>`}
+    </div>
+  `;
+
+  renderCategories();
+
+  // number field blur → save + live-update hero only
+  container.querySelectorAll(".num-field").forEach(inp => {
+    inp.addEventListener("blur", () => {
+      const rowKey = inp.dataset.row, field = inp.dataset.field;
+      const clean = inp.value.replace(/[^0-9]/g, "");
+      inp.value = clean;
+      state.rows[rowKey][field] = clean;
+      saveRows();
+      updateHeroOnly();
+    });
+    inp.addEventListener("input", () => { inp.value = inp.value.replace(/[^0-9]/g, ""); });
+  });
+
+  const showBtn = document.getElementById("showAddCat");
+  if(showBtn) showBtn.addEventListener("click", () => { state.showAddCat = true; renderHome({ doneCount, todayTotal, delta, status, streak }); setTimeout(()=>document.getElementById("newCatInput")?.focus(),0); });
+  const confirmBtn = document.getElementById("confirmAddCat");
+  if(confirmBtn) confirmBtn.addEventListener("click", addCategory);
+  const cancelBtn = document.getElementById("cancelAddCat");
+  if(cancelBtn) cancelBtn.addEventListener("click", () => { state.showAddCat = false; render(); });
+  const newCatInput = document.getElementById("newCatInput");
+  if(newCatInput) newCatInput.addEventListener("keydown", e => { if(e.key==="Enter") addCategory(); });
+}
+
+function withColor(svg, color){ return svg.replace('class="ic"', `class="ic" style="stroke:${color}"`); }
+
+function updateHeroOnly(){
+  const todayTotal = rowsTotal(state.rows);
+  const yTotal = state.yesterdayRows ? rowsTotal(state.yesterdayRows) : null;
+  const delta = yTotal===null ? null : todayTotal - yTotal;
+  const status = trendStatus(delta, yTotal);
+  const hero = document.querySelector(".hero");
+  if(!hero) return;
+  hero.querySelector(".num").textContent = todayTotal;
+  const badge = hero.querySelector(".hero-badge");
+  badge.style.color = status.color;
+  badge.innerHTML = `${ICONS[status.arrow]} ${delta===null ? status.label : `${delta>0?'+':''}${delta} vs hier`}`;
+}
+
+function addCategory(){
+  const input = document.getElementById("newCatInput");
+  const name = (input?.value || "").trim();
+  if(!name) return;
+  state.categories.push({ id:`cat_${Date.now()}`, name });
+  saveCategories();
+  state.showAddCat = false;
+  render();
+}
+
+function removeCategory(catId){
+  state.categories = state.categories.filter(c => c.id !== catId);
+  state.tasks = state.tasks.filter(t => t.categoryId !== catId);
+  saveCategories(); saveTasks();
+  render();
+}
+
+function addTask(catId){
+  const input = document.getElementById(`taskInput-${catId}`);
+  const text = (input?.value || "").trim();
+  if(!text) return;
+  state.tasks.push({ id:`task_${Date.now()}`, categoryId:catId, text });
+  saveTasks();
+  render();
+}
+
+function removeTask(taskId){
+  state.tasks = state.tasks.filter(t => t.id !== taskId);
+  saveTasks();
+  if(state.doneToday[taskId]){ delete state.doneToday[taskId]; saveCompletions(); }
+  render();
+}
+
+function toggleDone(task){
+  const nowDone = !state.doneToday[task.id];
+  if(nowDone) state.doneToday[task.id] = true; else delete state.doneToday[task.id];
+  saveCompletions();
+  logCompletionEvent(task, nowDone);
+  render();
+}
+
+function renderCategories(){
+  const el = document.getElementById("catList");
+  if(!el) return;
+  el.innerHTML = state.categories.map(cat => {
+    const catTasks = state.tasks.filter(t => t.categoryId === cat.id);
+    return `
+      <div class="cat-block">
+        <div class="cat-title-row">
+          <span class="cat-title">${escapeHtml(cat.name)}</span>
+          <button class="icon-btn" data-remove-cat="${cat.id}">${ICONS.trash}</button>
+        </div>
+        <div>
+          ${catTasks.map(t => taskRowHtml(t)).join("")}
+        </div>
+        ${catTasks.length ? `<p class="hint" style="margin-top:4px">Glissez une tâche pour la valider.</p>` : ""}
+        <div class="add-row">
+          <input class="row-input" id="taskInput-${cat.id}" placeholder="Nouvelle tâche…" />
+          <button class="btn-square" data-add-task="${cat.id}">${ICONS.plus}</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  el.querySelectorAll("[data-remove-cat]").forEach(b => b.addEventListener("click", () => removeCategory(b.dataset.removeCat)));
+  el.querySelectorAll("[data-add-task]").forEach(b => b.addEventListener("click", () => addTask(b.dataset.addTask)));
+  el.querySelectorAll("[id^='taskInput-']").forEach(inp => {
+    inp.addEventListener("keydown", e => { if(e.key==="Enter") addTask(inp.id.replace("taskInput-","")); });
+  });
+  el.querySelectorAll(".checkbox").forEach(cb => cb.addEventListener("click", () => toggleDone(findTask(cb.dataset.taskId))));
+  el.querySelectorAll("[data-remove-task]").forEach(b => b.addEventListener("click", () => removeTask(b.dataset.removeTask)));
+  el.querySelectorAll(".task-inner").forEach(setupSwipe);
+}
+
+function findTask(id){ return state.tasks.find(t => t.id === id); }
+
+function taskRowHtml(t){
+  const done = !!state.doneToday[t.id];
+  return `
+    <div class="task-row" style="background:${done ? 'rgba(28,154,91,.15)' : 'rgba(209,67,67,.1)'}">
+      <div class="task-reveal" style="justify-content:${done ? 'flex-end':'flex-start'}">
+        ${done ? withColor(ICONS.x,'var(--red)') : withColor(ICONS.check,'var(--green)')}
+      </div>
+      <div class="task-inner" data-task-id="${t.id}">
+        <div class="checkbox ${done?'done':''}" data-task-id="${t.id}">${done ? withColor(ICONS.check,'#fff') : ""}</div>
+        <span class="task-text ${done?'done':''}">${escapeHtml(t.text)}</span>
+        <button class="icon-btn" data-remove-task="${t.id}">${ICONS.x}</button>
+      </div>
+    </div>
+  `;
+}
+
+function setupSwipe(el){
+  let startX = 0, dragging = false, offset = 0;
+  const taskId = el.dataset.taskId;
+  const done = !!state.doneToday[taskId];
+
+  function start(x){ startX = x; dragging = true; el.style.transition = "none"; }
+  function move(x){
+    if(!dragging) return;
+    let diff = x - startX;
+    diff = done ? Math.min(0, Math.max(diff, -90)) : Math.max(0, Math.min(diff, 90));
+    offset = diff;
+    el.style.transform = `translateX(${diff}px)`;
+  }
+  function end(){
+    if(!dragging) return;
+    dragging = false;
+    el.style.transition = "transform 0.2s ease";
+    if(Math.abs(offset) > 64){ toggleDone(findTask(taskId)); return; }
+    el.style.transform = "translateX(0)";
+  }
+
+  el.addEventListener("touchstart", e => start(e.touches[0].clientX));
+  el.addEventListener("touchmove", e => move(e.touches[0].clientX));
+  el.addEventListener("touchend", end);
+  el.addEventListener("mousedown", e => start(e.clientX));
+  el.addEventListener("mousemove", e => { if(e.buttons===1) move(e.clientX); });
+  el.addEventListener("mouseup", end);
+  el.addEventListener("mouseleave", () => dragging && end());
+}
+
+/* ------------------------------ History tab ---------------------------- */
+function loadProdHistory(){
+  return LS.keys("kn_prod_").map(k => {
+    const v = LS.get(k); if(!v) return null;
+    const date = k.replace("kn_prod_","");
+    return {
+      date,
+      J_hetero:Number(v.J?.hetero)||0, J_homo:Number(v.J?.homo)||0,
+      J1_hetero:Number(v.J1?.hetero)||0, J1_homo:Number(v.J1?.homo)||0,
+      N_hetero:Number(v.nonPlanifiees?.hetero)||0, N_homo:Number(v.nonPlanifiees?.homo)||0,
+    };
+  }).filter(Boolean).sort((a,b)=> a.date > b.date ? 1 : -1);
+}
+
+function computeInsight(prodHistory){
+  if(prodHistory.length < 4) return null;
+  const now = new Date();
+  const d7 = fmtDateKey(new Date(now - 7*86400000));
+  const d14 = fmtDateKey(new Date(now - 14*86400000));
+  const recent = prodHistory.filter(e => e.date >= d7);
+  const prior = prodHistory.filter(e => e.date >= d14 && e.date < d7);
+  if(!recent.length || !prior.length) return null;
+  const totalOf = arr => arr.reduce((s,e)=> s+e.J_hetero+e.J_homo+e.J1_hetero+e.J1_homo+e.N_hetero+e.N_homo, 0);
+  const recentAvg = totalOf(recent)/recent.length, priorAvg = totalOf(prior)/prior.length;
+  if(priorAvg===0) return null;
+  const pct = Math.round(((recentAvg-priorAvg)/priorAvg)*100);
+  const heteroRecent = recent.reduce((s,e)=> s+e.J_hetero+e.J1_hetero+e.N_hetero, 0);
+  const homoRecent = recent.reduce((s,e)=> s+e.J_homo+e.J1_homo+e.N_homo, 0);
+  const dominant = heteroRecent===homoRecent ? null : (heteroRecent>homoRecent ? "hétérogènes" : "homogènes");
+  return { pct, dominant };
+}
+
+function renderHistory(){
+  const container = document.getElementById("tabContent");
+  const prodHistory = loadProdHistory();
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - state.rangeDays);
+  const cutoffKey = fmtDateKey(cutoff);
+  const filtered = prodHistory.filter(e => e.date >= cutoffKey);
+  const insight = computeInsight(prodHistory);
+
+  const log = LS.get("kn_completion_log") || [];
+  const filteredLog = state.catFilter==="all" ? log : log.filter(l => l.categoryId===state.catFilter);
+  const buckets = {};
+  filteredLog.forEach(l => {
+    const d = new Date(l.date+"T00:00:00");
+    const key = state.groupMode==="week" ? getISOWeek(d) : getMonthKey(d);
+    buckets[key] = (buckets[key]||0)+1;
+  });
+  const taskStats = Object.keys(buckets).sort().map(k => ({ period:k, count:buckets[k] })).slice(-12);
+
+  container.innerHTML = `
+    ${insight ? `
+      <div class="insight">
+        <div class="ico">${ICONS.spark}</div>
+        <p>
+          ${insight.pct===0 ? `Le volume total de palettes restantes est <b>stable</b> sur les 7 derniers jours.`
+            : insight.pct<0 ? `Le volume total de palettes restantes a <b>baissé de ${Math.abs(insight.pct)}%</b> sur les 7 derniers jours vs les 7 précédents.`
+            : `Le volume total de palettes restantes a <b>augmenté de ${insight.pct}%</b> sur les 7 derniers jours vs les 7 précédents.`}
+          ${insight.dominant ? ` Les palettes <b>${insight.dominant}</b> dominent cette semaine.` : ""}
+        </p>
+      </div>` : ""}
+
+    <div class="card">
+      <div class="section-title"><span class="plus-badge">+</span><h2>Évolution des palettes</h2></div>
+      <div class="chip-row">
+        ${[7,14,30,90].map(d => `<button class="chip ${state.rangeDays===d?'active':''}" style="${state.rangeDays===d?'background:var(--navy)':''}" data-range="${d}">${d} j</button>`).join("")}
+      </div>
+      <div class="chip-row">
+        ${SERIES_DEFS.map(s => `<button class="chip ${state.activeSeries[s.key]?'active':''}" style="${state.activeSeries[s.key]?`background:${s.color}`:''}" data-series="${s.key}">${s.label}</button>`).join("")}
+      </div>
+      <div id="lineChartHolder">${filtered.length ? lineChartSVG(filtered) : emptyChart("Pas encore de données de production sur cette période.")}</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="plus-badge">+</span><h2>Tâches accomplies</h2></div>
+      <div class="card-head-flex" style="margin-bottom:10px">
+        <div class="chip-row" style="margin-bottom:0">
+          <button class="chip ${state.groupMode==='week'?'active':''}" style="${state.groupMode==='week'?'background:var(--navy)':''}" data-group="week">Semaine</button>
+          <button class="chip ${state.groupMode==='month'?'active':''}" style="${state.groupMode==='month'?'background:var(--navy)':''}" data-group="month">Mois</button>
+        </div>
+        ${state.categories.length ? `
+          <select class="select-cat" id="catFilterSelect">
+            <option value="all">Toutes catégories</option>
+            ${state.categories.map(c => `<option value="${c.id}" ${state.catFilter===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join("")}
+          </select>` : ""}
+      </div>
+      <div id="barChartHolder">${taskStats.length ? barChartSVG(taskStats) : emptyChart("Aucune tâche cochée pour l'instant.")}</div>
+    </div>
+  `;
+
+  container.querySelectorAll("[data-range]").forEach(b => b.addEventListener("click", () => { state.rangeDays = Number(b.dataset.range); renderHistory(); }));
+  container.querySelectorAll("[data-series]").forEach(b => b.addEventListener("click", () => { state.activeSeries[b.dataset.series] = !state.activeSeries[b.dataset.series]; renderHistory(); }));
+  container.querySelectorAll("[data-group]").forEach(b => b.addEventListener("click", () => { state.groupMode = b.dataset.group; renderHistory(); }));
+  const catSel = document.getElementById("catFilterSelect");
+  if(catSel) catSel.addEventListener("change", () => { state.catFilter = catSel.value; renderHistory(); });
+}
+
+function emptyChart(text){
+  return `<div class="chart-empty">${ICONS.chart}<span style="margin-top:8px">${text}</span></div>`;
+}
+
+function lineChartSVG(data){
+  const W=320,H=200,padL=28,padR=8,padT=10,padB=22;
+  const activeKeys = SERIES_DEFS.filter(s => state.activeSeries[s.key]);
+  if(!activeKeys.length) return emptyChart("Sélectionnez au moins une série.");
+  let maxVal = 1;
+  data.forEach(d => activeKeys.forEach(s => { if(d[s.key] > maxVal) maxVal = d[s.key]; }));
+  maxVal = Math.ceil(maxVal*1.15) || 1;
+  const stepX = data.length>1 ? (W-padL-padR)/(data.length-1) : 0;
+  const yFor = v => H-padB-(v/maxVal)*(H-padT-padB);
+  const xFor = i => padL + i*stepX;
+
+  let gridLines = "";
+  for(let g=0; g<=3; g++){
+    const y = padT + g*((H-padT-padB)/3);
+    gridLines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-dasharray="3,3"/>`;
+  }
+
+  let paths = "";
+  activeKeys.forEach(s => {
+    const pts = data.map((d,i) => `${xFor(i)},${yFor(d[s.key])}`).join(" ");
+    const hex = SERIES_HEX[s.color] || s.color;
+    paths += `<polyline points="${pts}" fill="none" stroke="${hex}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    data.forEach((d,i) => { paths += `<circle cx="${xFor(i)}" cy="${yFor(d[s.key])}" r="2.5" fill="${hex}"/>`; });
+  });
+
+  const firstLabel = data[0].date.slice(5), lastLabel = data[data.length-1].date.slice(5);
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:220px" preserveAspectRatio="xMidYMid meet">
+      ${gridLines}
+      ${paths}
+      <text x="${padL}" y="${H-6}" font-size="9" fill="var(--text-muted)">${firstLabel}</text>
+      <text x="${W-padR}" y="${H-6}" font-size="9" fill="var(--text-muted)" text-anchor="end">${lastLabel}</text>
+    </svg>
+  `;
+}
+
+function barChartSVG(data){
+  const W=320,H=170,padL=8,padR=8,padT=10,padB=26;
+  const maxVal = Math.max(...data.map(d=>d.count), 1);
+  const bw = (W-padL-padR)/data.length;
+  const bars = data.map((d,i) => {
+    const h = ((H-padT-padB) * d.count) / maxVal;
+    const x = padL + i*bw + bw*0.18;
+    const barW = bw*0.64;
+    const y = H-padB-h;
+    return `
+      <rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" fill="var(--orange-hex)"/>
+      <text x="${x+barW/2}" y="${H-padB+12}" font-size="8" fill="var(--text-muted)" text-anchor="middle">${escapeHtml(d.period.slice(-5))}</text>
+      <text x="${x+barW/2}" y="${y-4}" font-size="9" fill="var(--text)" text-anchor="middle" font-weight="700">${d.count}</text>
+    `;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:190px" preserveAspectRatio="xMidYMid meet">
+    <style>rect{fill:#F5A623}</style>
+    ${bars}
+  </svg>`;
+}
+
+render();
+</script>
+</body>
+</html>
