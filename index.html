@@ -309,20 +309,50 @@ Ajouter une catégorie
 </sc-for>
 </div>
 <sc-if value="{{ hasChart }}" hint-placeholder-val="{{ true }}">
-<svg viewBox="0 0 320 200" style="width:100%;height:220px" preserveAspectRatio="xMidYMid meet">
-<line x1="28" y1="10" x2="312" y2="10" stroke="#E3E7F3" stroke-dasharray="3,3"></line>
-<line x1="28" y1="66" x2="312" y2="66" stroke="#E3E7F3" stroke-dasharray="3,3"></line>
-<line x1="28" y1="122" x2="312" y2="122" stroke="#E3E7F3" stroke-dasharray="3,3"></line>
-<line x1="28" y1="178" x2="312" y2="178" stroke="#E3E7F3" stroke-dasharray="3,3"></line>
+<svg viewBox="0 0 320 206" style="width:100%;height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">
+<sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="4">
+<line x1="34" y1="{{ t.y }}" x2="312" y2="{{ t.y }}" stroke="{{ t.stroke }}" stroke-dasharray="{{ t.dash }}"></line>
+<text x="28" y="{{ t.ty }}" font-size="9" font-weight="600" fill="#6C7590" text-anchor="end">{{ t.label }}</text>
+</sc-for>
+<line x1="{{ selX }}" y1="10" x2="{{ selX }}" y2="178" stroke="#9098B5" stroke-width="1" stroke-dasharray="2,2"></line>
 <sc-for list="{{ chartSeries }}" as="s" hint-placeholder-count="2">
 <polyline points="{{ s.pointsStr }}" fill="none" stroke="{{ s.hex }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;animation:kfDrawLine .9s ease forwards;animation-delay:{{ s.lineDelay }}s"></polyline>
 <sc-for list="{{ s.points }}" as="p" hint-placeholder-count="2">
-<circle cx="{{ p.x }}" cy="{{ p.y }}" r="2.5" fill="{{ s.hex }}" style="opacity:0;animation:kfPopIn .3s ease forwards;animation-delay:{{ s.dotDelay }}s"></circle>
+<circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}" stroke="{{ s.hex }}" stroke-width="{{ p.sw }}" style="opacity:0;animation:kfPopIn .3s ease forwards;animation-delay:{{ s.dotDelay }}s"></circle>
 </sc-for>
 </sc-for>
-<text x="28" y="194" font-size="9" fill="#6C7590">{{ firstLabel }}</text>
-<text x="312" y="194" font-size="9" fill="#6C7590" text-anchor="end">{{ lastLabel }}</text>
+<sc-for list="{{ xTicks }}" as="x" hint-placeholder-count="4">
+<text x="{{ x.x }}" y="194" font-size="9" font-weight="{{ x.weight }}" fill="{{ x.fill }}" text-anchor="{{ x.anchor }}">{{ x.label }}</text>
+</sc-for>
+<sc-for list="{{ dayHits }}" as="h" hint-placeholder-count="0">
+<rect x="{{ h.x }}" y="0" width="{{ h.w }}" height="206" fill="transparent" onClick="{{ h.onClick }}" style="cursor:pointer"></rect>
+</sc-for>
 </svg>
+<p style="font-size:10px;color:#9098B5;margin:4px 0 0">Palettes restantes par jour · touchez le graphique pour choisir un jour</p>
+<div style="margin-top:12px;padding-top:12px;border-top:1px solid #E3E7F3">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
+<span style="font-size:13px;font-weight:800;color:#0F1D4D;text-transform:capitalize">{{ selDateLabel }}</span>
+<span style="font-size:11px;color:#6C7590">vs jour précédent</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<sc-for list="{{ selRows }}" as="r" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto 44px;align-items:center;gap:8px">
+<span style="width:10px;height:10px;border-radius:50%;background:{{ r.hex }}"></span>
+<span style="font-size:12px;color:#12204F">{{ r.label }}</span>
+<span style="font-size:15px;font-weight:800;color:#0F1D4D;font-variant-numeric:tabular-nums">{{ r.value }}</span>
+<span style="font-size:11px;font-weight:700;color:{{ r.deltaColor }};text-align:right;font-variant-numeric:tabular-nums">{{ r.delta }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ selHasTotal }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:10px minmax(0,1fr) auto 44px;align-items:center;gap:8px;margin-top:2px;padding-top:6px;border-top:1px dashed #E3E7F3">
+<span></span>
+<span style="font-size:12px;font-weight:700;color:#12204F">Total sélection</span>
+<span style="font-size:15px;font-weight:900;color:#0F1D4D;font-variant-numeric:tabular-nums">{{ selTotal }}</span>
+<span style="font-size:11px;font-weight:700;color:{{ selTotalDeltaColor }};text-align:right;font-variant-numeric:tabular-nums">{{ selTotalDelta }}</span>
+</div>
+</sc-if>
+</div>
+</div>
 </sc-if>
 <sc-if value="{{ noChart }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;align-items:center;padding:26px 0;color:#6C7590;font-size:12px;text-align:center">
@@ -733,7 +763,7 @@ class Component extends DCLogic {
       doneToday,
       showAddCat: false, newCatName: "",
       taskInputs: {},
-      rangeDays: 14, groupMode: "week", catFilter: "all", activeSeries,
+      rangeDays: 14, chartSel: null, groupMode: "week", catFilter: "all", activeSeries,
       notes: (function(){
         let list = LS.get("kn_notes_list") || [];
         const legacy = LS.get("kn_notes");
@@ -1156,7 +1186,7 @@ class Component extends DCLogic {
     this.setState({ notes });
   };
   toggleSetting = (key) => { const settings = { ...this.state.settings, [key]: !this.state.settings[key] }; this.setState({ settings }); LS.set("kn_settings", settings); };
-  setRange = (d) => this.setState({ rangeDays:d });
+  setRange = (d) => this.setState({ rangeDays:d, chartSel:null });
   toggleSeries = (key) => this.setState({ activeSeries: { ...this.state.activeSeries, [key]: !this.state.activeSeries[key] } });
   setGroupMode = (m) => this.setState({ groupMode:m });
   setCatFilter = (v) => this.setState({ catFilter:v });
@@ -1270,7 +1300,8 @@ class Component extends DCLogic {
       return { key:sd.key, label:sd.label, bg: active ? sd.hex : "transparent", color: active ? "#fff" : "#6C7590", onClick: () => this.toggleSeries(sd.key) };
     });
 
-    const W=320, padL=28, padR=8;
+    const W=320, padL=34, padR=8;
+    let yTicks = [], xTicks = [], dayHits = [], selX = -10, selRows = [], selDateLabel = "", selTotal = "", selTotalDelta = "", selTotalDeltaColor = "#6C7590", selHasTotal = false;
     const activeSeriesDefs = SERIES_DEFS.filter(sd => s.activeSeries[sd.key]);
     let chartSeries = [];
     let chartEmptyMessage = null;
@@ -1279,12 +1310,47 @@ class Component extends DCLogic {
     else {
       let maxVal = 1;
       filtered.forEach(d => activeSeriesDefs.forEach(sd => { if(d[sd.key]>maxVal) maxVal=d[sd.key]; }));
-      maxVal = Math.ceil(maxVal*1.15) || 1;
-      const stepX = filtered.length>1 ? (W-padL-padR)/(filtered.length-1) : 0;
+      const rawStep = maxVal/4, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const niceStep = Math.max(1, [1,2,2.5,5,10].map(m=>m*mag).find(st => st >= rawStep) || 10*mag);
+      maxVal = Math.ceil(maxVal/niceStep)*niceStep || niceStep;
+      const n = filtered.length;
+      const stepX = n>1 ? (W-padL-padR)/(n-1) : 0;
       const yFor = v => 178 - (v/maxVal)*168;
-      const xFor = i => padL + i*stepX;
+      const xFor = i => n>1 ? padL + i*stepX : (padL + W - padR)/2;
+      for(let v=0; v<=maxVal+1e-9; v+=niceStep){
+        const y = Number(yFor(v).toFixed(1));
+        yTicks.push({ y, ty: y+3, label: String(Math.round(v*10)/10), stroke: v===0 ? "#C7CEE3" : "#E3E7F3", dash: v===0 ? "0" : "3,3" });
+      }
+      let selIdx = filtered.findIndex(d => d.date === s.chartSel);
+      if(selIdx < 0) selIdx = n-1;
+      const fmtShort = (key) => { const p = key.split("-"); return p[2] + "/" + p[1]; };
+      const nLabels = Math.min(n, 5);
+      const labelIdx = new Set();
+      for(let k=0; k<nLabels; k++) labelIdx.add(nLabels===1 ? 0 : Math.round(k*(n-1)/(nLabels-1)));
+      labelIdx.forEach(i => {
+        if(Math.abs(i - selIdx) > 0 && Math.abs(xFor(i) - xFor(selIdx)) < 26) return;
+        xTicks.push({ x: Number(xFor(i).toFixed(1)), label: fmtShort(filtered[i].date), anchor: n===1 ? "middle" : i===0 ? "start" : i===n-1 ? "end" : "middle", fill: "#6C7590", weight: "500" });
+      });
+      xTicks = xTicks.filter(t => t.label !== fmtShort(filtered[selIdx].date));
+      xTicks.push({ x: Number(xFor(selIdx).toFixed(1)), label: fmtShort(filtered[selIdx].date), anchor: n===1 ? "middle" : selIdx===0 ? "start" : selIdx===n-1 ? "end" : "middle", fill: "#0F1D4D", weight: "800" });
+      selX = Number(xFor(selIdx).toFixed(1));
+      const hitW = n>1 ? stepX : W;
+      dayHits = filtered.map((d,i) => ({ x: Number((xFor(i) - hitW/2).toFixed(1)), w: Number(hitW.toFixed(1)), onClick: () => this.setState({ chartSel: d.date }) }));
+      const cur = filtered[selIdx], prev = selIdx>0 ? filtered[selIdx-1] : null;
+      const fmtDelta = (dv) => dv===null ? "—" : dv===0 ? "=" : (dv>0?"+":"−") + Math.abs(dv);
+      const deltaCol = (dv) => dv===null || dv===0 ? "#6C7590" : dv>0 ? "#D14343" : "#1C9A5B";
+      selRows = activeSeriesDefs.map(sd => {
+        const dv = prev ? (cur[sd.key]||0) - (prev[sd.key]||0) : null;
+        return { hex: sd.hex, label: sd.label, value: cur[sd.key]||0, delta: fmtDelta(dv), deltaColor: deltaCol(dv) };
+      });
+      selHasTotal = activeSeriesDefs.length > 1;
+      const tot = activeSeriesDefs.reduce((a,sd)=>a+(cur[sd.key]||0),0);
+      const totPrev = prev ? activeSeriesDefs.reduce((a,sd)=>a+(prev[sd.key]||0),0) : null;
+      selTotal = tot; selTotalDelta = fmtDelta(totPrev===null?null:tot-totPrev); selTotalDeltaColor = deltaCol(totPrev===null?null:tot-totPrev);
+      const sd0 = new Date(cur.date+"T00:00:00");
+      selDateLabel = `${FR_DAYS[sd0.getDay()]} ${sd0.getDate()} ${FR_MONTHS[sd0.getMonth()]}`;
       chartSeries = activeSeriesDefs.map((sd, si) => {
-        const points = filtered.map((d,i) => ({ x:Number(xFor(i).toFixed(1)), y:Number(yFor(d[sd.key]).toFixed(1)) }));
+        const points = filtered.map((d,i) => ({ x:Number(xFor(i).toFixed(1)), y:Number(yFor(d[sd.key]||0).toFixed(1)), r: i===selIdx ? 4.5 : 2.5, fill: i===selIdx ? "#fff" : sd.hex, sw: i===selIdx ? 2.5 : 0 }));
         return {
           key: sd.key, hex: sd.hex,
           pointsStr: points.map(p=>`${p.x},${p.y}`).join(" "),
@@ -1401,7 +1467,7 @@ class Component extends DCLogic {
 
       insightText, hasInsight: !!insightText,
       rangeChips, seriesChips,
-      chartEmptyMessage, hasChart: !chartEmptyMessage, noChart: !!chartEmptyMessage, chartSeries, firstLabel, lastLabel,
+      chartEmptyMessage, hasChart: !chartEmptyMessage, noChart: !!chartEmptyMessage, chartSeries, firstLabel, lastLabel, yTicks, xTicks, dayHits, selX, selRows, selDateLabel, selTotal, selTotalDelta, selTotalDeltaColor, selHasTotal,
 
       groupChips, catFilter: s.catFilter, onCatFilterChange: (e)=>this.setCatFilter(e.target.value),
       barEmptyMessage, hasBar: !barEmptyMessage, noBar: !!barEmptyMessage, barData,
