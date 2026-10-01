@@ -247,7 +247,7 @@ a:hover{color:#1E3B7A;}
 </sc-if>
 
 <div style="display:flex;gap:8px;margin-top:8px">
-<input value="{{ cat.taskInputValue }}" onChange="{{ cat.onTaskInputChange }}" onKeyDown="{{ cat.onTaskInputKeyDown }}" placeholder="Nouvelle tâche…" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
+<input defaultValue="" data-kn-task-input="{{ cat.id }}" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ cat.onTaskInputChange }}" onKeyDown="{{ cat.onTaskInputKeyDown }}" placeholder="Nouvelle tâche…" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
 <button onClick="{{ cat.onAddTask }}" style="width:34px;height:34px;border-radius:12px;background:#0F1D4D;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
@@ -261,7 +261,7 @@ a:hover{color:#1E3B7A;}
 
 <sc-if value="{{ showAddCat }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;gap:8px;margin-top:8px;animation:kfFadeUp .3s ease both">
-<input value="{{ newCatName }}" onChange="{{ onNewCatChange }}" onKeyDown="{{ onNewCatKeyDown }}" placeholder="Nom de la catégorie…" autoFocus="{{ true }}" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
+<input defaultValue="" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ onNewCatChange }}" onKeyDown="{{ onNewCatKeyDown }}" placeholder="Nom de la catégorie…" autoFocus="{{ true }}" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
 <button onClick="{{ onConfirmAddCat }}" style="width:34px;height:34px;border-radius:12px;background:#F5A623;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
 </button>
@@ -486,7 +486,7 @@ Nouvelle note
 </sc-if>
 
 <sc-if value="{{ isNotesCompose }}" hint-placeholder-val="{{ false }}">
-<textarea value="{{ composeText }}" onChange="{{ onComposeTextChange }}" placeholder="Écrivez une note pour l'équipe…" style="width:100%;min-height:{{ composeMinHeight }};border:1px solid #E3E7F3;border-radius:14px;padding:12px;font-size:14px;font-family:inherit;color:#12204F;resize:none;outline:none;box-sizing:border-box"></textarea>
+<textarea defaultValue="{{ composeText }}" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" onChange="{{ onComposeTextChange }}" placeholder="Écrivez une note pour l'équipe…" style="width:100%;min-height:{{ composeMinHeight }};border:1px solid #E3E7F3;border-radius:14px;padding:12px;font-size:14px;font-family:inherit;color:#12204F;resize:none;outline:none;box-sizing:border-box"></textarea>
 <sc-if value="{{ composePhoto }}" hint-placeholder-val="{{ false }}">
 <div style="position:relative;margin-top:12px">
 <img src="{{ composePhoto }}" style="width:100%;max-height:200px;object-fit:cover;border-radius:14px;display:block" />
@@ -591,8 +591,8 @@ Nouvelle note
 
 <sc-if value="{{ syncNeedsConfig }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;gap:8px">
-<input value="{{ syncUrlInput }}" onChange="{{ onSyncUrlChange }}" placeholder="https://xxxx.supabase.co" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
-<input value="{{ syncKeyInput }}" onChange="{{ onSyncKeyChange }}" placeholder="Clé publique (anon)" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
+<input defaultValue="" autoCapitalize="none" autoCorrect="off" onChange="{{ onSyncUrlChange }}" placeholder="https://xxxx.supabase.co" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
+<input defaultValue="" autoCapitalize="none" autoCorrect="off" onChange="{{ onSyncKeyChange }}" placeholder="Clé publique (anon)" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
 <button onClick="{{ saveSyncConfig }}" style-hover="opacity:.9" style="width:100%;padding:12px;border:none;border-radius:12px;background:#0F1D4D;color:#fff;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer">Connecter le projet</button>
 <p style="font-size:11px;color:#8A93AB;margin:2px 0 0;line-height:1.5">Les deux valeurs sont dans Supabase, onglet Settings → API. La clé anon est publique, elle peut rester dans l'app.</p>
 </div>
@@ -600,7 +600,7 @@ Nouvelle note
 
 <sc-if value="{{ syncNeedsLogin }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;gap:8px">
-<input value="{{ syncEmailInput }}" onChange="{{ onSyncEmailChange }}" type="email" placeholder="votre@email.fr" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
+<input defaultValue="{{ syncEmailInput }}" autoCapitalize="none" onChange="{{ onSyncEmailChange }}" type="email" placeholder="votre@email.fr" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #E3E7F3;border-radius:10px;font-size:13px;font-family:inherit;color:#12204F;background:#F7F9FD;outline:none">
 <button onClick="{{ sendMagicLink }}" style-hover="opacity:.9" style="width:100%;padding:12px;border:none;border-radius:12px;background:#F5A623;color:#fff;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer">Recevoir le lien de connexion</button>
 <button onClick="{{ resetSyncConfig }}" style-hover="color:#12204F" style="align-self:center;background:none;border:none;padding:4px;font-size:11px;color:#8A93AB;font-family:inherit;cursor:pointer;text-decoration:underline">Changer de projet Supabase</button>
 </div>
@@ -1020,6 +1020,8 @@ class Component extends DCLogic {
     if(!text) return;
     const tasks = [...this.state.tasks, { id:`task_${Date.now()}`, categoryId:catId, text }];
     this.setState({ tasks, taskInputs: { ...this.state.taskInputs, [catId]: "" } });
+    const el = document.querySelector('[data-kn-task-input="' + catId + '"]');
+    if(el) el.value = "";
     LS.set("kn_tasks", tasks);
   };
   removeTask = (id) => {
@@ -1233,7 +1235,7 @@ class Component extends DCLogic {
         id:cat.id, name:cat.name, tasks:catTasks, hasTasks: catTasks.length>0,
         taskInputValue: s.taskInputs[cat.id] || "",
         onTaskInputChange: (e) => this.setState({ taskInputs: { ...this.state.taskInputs, [cat.id]: e.target.value } }),
-        onTaskInputKeyDown: (e) => { if(e.key==="Enter") this.addTask(cat.id); },
+        onTaskInputKeyDown: (e) => { if(e.key==="Enter" && !(e.nativeEvent && e.nativeEvent.isComposing)) this.addTask(cat.id); },
         onAddTask: () => this.addTask(cat.id),
         onRemoveCat: () => this.removeCategory(cat.id),
       };
@@ -1364,7 +1366,7 @@ class Component extends DCLogic {
       onCancelAddCat: () => this.setState({showAddCat:false,newCatName:""}),
       onConfirmAddCat: this.addCategory,
       onNewCatChange: (e) => this.setState({newCatName:e.target.value}),
-      onNewCatKeyDown: (e) => { if(e.key==="Enter") this.addCategory(); },
+      onNewCatKeyDown: (e) => { if(e.key==="Enter" && !(e.nativeEvent && e.nativeEvent.isComposing)) this.addCategory(); },
 
       goHome: this.setTab.bind(this,"home"), goSuivi: this.setTab.bind(this,"suivi"), goHistorique: this.setTab.bind(this,"historique"),
       goSuiviPalettes: () => this.goToSuiviSection(this.palettesCardRef),
