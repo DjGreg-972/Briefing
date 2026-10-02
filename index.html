@@ -309,10 +309,10 @@ Ajouter une catégorie
 </sc-for>
 </div>
 <sc-if value="{{ hasChart }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative">
 <svg viewBox="0 0 320 206" style="width:100%;height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">
 <sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="4">
 <line x1="34" y1="{{ t.y }}" x2="312" y2="{{ t.y }}" stroke="{{ t.stroke }}" stroke-dasharray="{{ t.dash }}"></line>
-<text x="28" y="{{ t.ty }}" font-size="9" font-weight="600" fill="#6C7590" text-anchor="end">{{ t.label }}</text>
 </sc-for>
 <line x1="{{ selX }}" y1="10" x2="{{ selX }}" y2="178" stroke="#9098B5" stroke-width="1" stroke-dasharray="2,2"></line>
 <sc-for list="{{ chartSeries }}" as="s" hint-placeholder-count="2">
@@ -321,13 +321,17 @@ Ajouter une catégorie
 <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}" fill="{{ p.fill }}" stroke="{{ s.hex }}" stroke-width="{{ p.sw }}" style="opacity:0;animation:kfPopIn .3s ease forwards;animation-delay:{{ s.dotDelay }}s"></circle>
 </sc-for>
 </sc-for>
-<sc-for list="{{ xTicks }}" as="x" hint-placeholder-count="4">
-<text x="{{ x.x }}" y="194" font-size="9" font-weight="{{ x.weight }}" fill="{{ x.fill }}" text-anchor="{{ x.anchor }}">{{ x.label }}</text>
-</sc-for>
 <sc-for list="{{ dayHits }}" as="h" hint-placeholder-count="0">
 <rect x="{{ h.x }}" y="0" width="{{ h.w }}" height="206" fill="transparent" onClick="{{ h.onClick }}" style="cursor:pointer"></rect>
 </sc-for>
 </svg>
+<sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="0">
+<span style="position:absolute;left:{{ t.left }};top:{{ t.top }};transform:translate(-100%,-50%);font-size:10px;font-weight:600;color:#6C7590;line-height:1;pointer-events:none;font-variant-numeric:tabular-nums">{{ t.label }}</span>
+</sc-for>
+<sc-for list="{{ xTicks }}" as="x" hint-placeholder-count="0">
+<span style="position:absolute;left:{{ x.left }};top:{{ x.top }};transform:{{ x.tf }};font-size:10px;font-weight:{{ x.weight }};color:{{ x.fill }};line-height:1;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums">{{ x.label }}</span>
+</sc-for>
+</div>
 <p style="font-size:10px;color:#9098B5;margin:4px 0 0">Palettes restantes par jour · touchez le graphique pour choisir un jour</p>
 <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E3E7F3">
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px">
@@ -383,13 +387,19 @@ Ajouter une catégorie
 </sc-if>
 </div>
 <sc-if value="{{ hasBar }}" hint-placeholder-val="{{ true }}">
-<svg viewBox="0 0 320 170" style="width:100%;height:190px" preserveAspectRatio="xMidYMid meet">
+<div style="position:relative">
+<svg viewBox="0 0 320 170" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">
 <sc-for list="{{ barData }}" as="b" hint-placeholder-count="3">
 <rect x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="4" fill="#F5A623" style="animation:kfGrowBar .5s cubic-bezier(.16,1,.3,1) both;animation-delay:{{ b.delay }}s;transform-origin:bottom;transform-box:fill-box"></rect>
-<text x="{{ b.labelX }}" y="156" font-size="8" fill="#6C7590" text-anchor="middle">{{ b.label }}</text>
-<text x="{{ b.labelX }}" y="{{ b.valueLabelY }}" font-size="9" fill="#12204F" text-anchor="middle" font-weight="700">{{ b.value }}</text>
 </sc-for>
 </svg>
+<sc-for list="{{ barData }}" as="b" hint-placeholder-count="0">
+<sc-if value="{{ b.showLabel }}" hint-placeholder-val="{{ false }}">
+<span style="position:absolute;left:{{ b.left }};top:{{ b.labelTop }};transform:translate(-50%,-50%);font-size:9px;color:#6C7590;line-height:1;white-space:nowrap;pointer-events:none">{{ b.label }}</span>
+</sc-if>
+<span style="position:absolute;left:{{ b.left }};top:{{ b.valueTop }};transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:#12204F;line-height:1;pointer-events:none">{{ b.value }}</span>
+</sc-for>
+</div>
 </sc-if>
 <sc-if value="{{ noBar }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-direction:column;align-items:center;padding:26px 0;color:#6C7590;font-size:12px;text-align:center">
@@ -669,7 +679,10 @@ const SERIES_DEFS = [
   { key:"J1_homo", label:"J+1 · Homo", hex:"#D98C0F" },
   { key:"N_hetero", label:"Non plan. · Hétéro", hex:"#1C9A5B" },
   { key:"N_homo", label:"Non plan. · Homo", hex:"#D14343" },
+  { key:"JJ1_hetero", label:"J + J+1 · Hétéro", hex:"#7B3FA8", sum:["J_hetero","J1_hetero"] },
+  { key:"JJ1_homo", label:"J + J+1 · Homo", hex:"#C27A00", sum:["J_homo","J1_homo"] },
 ];
+const seriesVal = (d, sd) => sd.sum ? sd.sum.reduce((a,k)=>a+(Number(d[k])||0),0) : (Number(d[sd.key])||0);
 
 function fmtDateKey(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
 function fmtDateHuman(d){ return `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
@@ -730,6 +743,7 @@ class Component extends DCLogic {
     (LS.get(`kn_completions_${todayKey}`) || []).forEach(id => doneToday[id] = true);
     const activeSeries = {};
     SERIES_DEFS.forEach((sd,i) => activeSeries[sd.key] = i < 2);
+    Object.assign(activeSeries, LS.get("kn_active_series") || {});
     this._todayKey = todayKey; this._yesterdayKey = yesterdayKey; this._today = today;
     this._dragId = null; this._dragDone = false; this._startX = 0;
     this._photoInputRef = React.createRef();
@@ -1187,7 +1201,7 @@ class Component extends DCLogic {
   };
   toggleSetting = (key) => { const settings = { ...this.state.settings, [key]: !this.state.settings[key] }; this.setState({ settings }); LS.set("kn_settings", settings); };
   setRange = (d) => this.setState({ rangeDays:d, chartSel:null });
-  toggleSeries = (key) => this.setState({ activeSeries: { ...this.state.activeSeries, [key]: !this.state.activeSeries[key] } });
+  toggleSeries = (key) => { const activeSeries = { ...this.state.activeSeries, [key]: !this.state.activeSeries[key] }; this.setState({ activeSeries }); LS.set("kn_active_series", activeSeries); };
   setGroupMode = (m) => this.setState({ groupMode:m });
   setCatFilter = (v) => this.setState({ catFilter:v });
 
@@ -1309,7 +1323,7 @@ class Component extends DCLogic {
     else if(activeSeriesDefs.length===0){ chartEmptyMessage = "Sélectionnez au moins une série."; }
     else {
       let maxVal = 1;
-      filtered.forEach(d => activeSeriesDefs.forEach(sd => { if(d[sd.key]>maxVal) maxVal=d[sd.key]; }));
+      filtered.forEach(d => activeSeriesDefs.forEach(sd => { const v = seriesVal(d, sd); if(v>maxVal) maxVal=v; }));
       const rawStep = maxVal/4, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
       const niceStep = Math.max(1, [1,2,2.5,5,10].map(m=>m*mag).find(st => st >= rawStep) || 10*mag);
       maxVal = Math.ceil(maxVal/niceStep)*niceStep || niceStep;
@@ -1319,7 +1333,7 @@ class Component extends DCLogic {
       const xFor = i => n>1 ? padL + i*stepX : (padL + W - padR)/2;
       for(let v=0; v<=maxVal+1e-9; v+=niceStep){
         const y = Number(yFor(v).toFixed(1));
-        yTicks.push({ y, ty: y+3, label: String(Math.round(v*10)/10), stroke: v===0 ? "#C7CEE3" : "#E3E7F3", dash: v===0 ? "0" : "3,3" });
+        yTicks.push({ y, left: (28/320*100).toFixed(2)+"%", top: (y/206*100).toFixed(2)+"%", label: String(Math.round(v*10)/10), stroke: v===0 ? "#C7CEE3" : "#E3E7F3", dash: v===0 ? "0" : "3,3" });
       }
       let selIdx = filtered.findIndex(d => d.date === s.chartSel);
       if(selIdx < 0) selIdx = n-1;
@@ -1333,6 +1347,7 @@ class Component extends DCLogic {
       });
       xTicks = xTicks.filter(t => t.label !== fmtShort(filtered[selIdx].date));
       xTicks.push({ x: Number(xFor(selIdx).toFixed(1)), label: fmtShort(filtered[selIdx].date), anchor: n===1 ? "middle" : selIdx===0 ? "start" : selIdx===n-1 ? "end" : "middle", fill: "#0F1D4D", weight: "800" });
+      xTicks = xTicks.map(t => ({ ...t, left: (t.x/320*100).toFixed(2)+"%", top: (191/206*100).toFixed(2)+"%", tf: t.anchor==="start" ? "translate(0,-50%)" : t.anchor==="end" ? "translate(-100%,-50%)" : "translate(-50%,-50%)" }));
       selX = Number(xFor(selIdx).toFixed(1));
       const hitW = n>1 ? stepX : W;
       dayHits = filtered.map((d,i) => ({ x: Number((xFor(i) - hitW/2).toFixed(1)), w: Number(hitW.toFixed(1)), onClick: () => this.setState({ chartSel: d.date }) }));
@@ -1340,17 +1355,18 @@ class Component extends DCLogic {
       const fmtDelta = (dv) => dv===null ? "—" : dv===0 ? "=" : (dv>0?"+":"−") + Math.abs(dv);
       const deltaCol = (dv) => dv===null || dv===0 ? "#6C7590" : dv>0 ? "#D14343" : "#1C9A5B";
       selRows = activeSeriesDefs.map(sd => {
-        const dv = prev ? (cur[sd.key]||0) - (prev[sd.key]||0) : null;
-        return { hex: sd.hex, label: sd.label, value: cur[sd.key]||0, delta: fmtDelta(dv), deltaColor: deltaCol(dv) };
+        const dv = prev ? seriesVal(cur, sd) - seriesVal(prev, sd) : null;
+        return { hex: sd.hex, label: sd.label, value: seriesVal(cur, sd), delta: fmtDelta(dv), deltaColor: deltaCol(dv) };
       });
-      selHasTotal = activeSeriesDefs.length > 1;
-      const tot = activeSeriesDefs.reduce((a,sd)=>a+(cur[sd.key]||0),0);
-      const totPrev = prev ? activeSeriesDefs.reduce((a,sd)=>a+(prev[sd.key]||0),0) : null;
+      const baseDefs = activeSeriesDefs.filter(sd => !sd.sum);
+      selHasTotal = baseDefs.length > 1;
+      const tot = baseDefs.reduce((a,sd)=>a+seriesVal(cur, sd),0);
+      const totPrev = prev ? baseDefs.reduce((a,sd)=>a+seriesVal(prev, sd),0) : null;
       selTotal = tot; selTotalDelta = fmtDelta(totPrev===null?null:tot-totPrev); selTotalDeltaColor = deltaCol(totPrev===null?null:tot-totPrev);
       const sd0 = new Date(cur.date+"T00:00:00");
       selDateLabel = `${FR_DAYS[sd0.getDay()]} ${sd0.getDate()} ${FR_MONTHS[sd0.getMonth()]}`;
       chartSeries = activeSeriesDefs.map((sd, si) => {
-        const points = filtered.map((d,i) => ({ x:Number(xFor(i).toFixed(1)), y:Number(yFor(d[sd.key]||0).toFixed(1)), r: i===selIdx ? 4.5 : 2.5, fill: i===selIdx ? "#fff" : sd.hex, sw: i===selIdx ? 2.5 : 0 }));
+        const points = filtered.map((d,i) => ({ x:Number(xFor(i).toFixed(1)), y:Number(yFor(seriesVal(d, sd)).toFixed(1)), r: i===selIdx ? 4.5 : 2.5, fill: i===selIdx ? "#fff" : sd.hex, sw: i===selIdx ? 2.5 : 0 }));
         return {
           key: sd.key, hex: sd.hex,
           pointsStr: points.map(p=>`${p.x},${p.y}`).join(" "),
@@ -1383,7 +1399,7 @@ class Component extends DCLogic {
         const x = BpadL + i*bw + bw*0.18;
         const barW = bw*0.64;
         const y = BH-BpadB-h;
-        return { x:Number(x.toFixed(1)), y:Number(y.toFixed(1)), w:Number(barW.toFixed(1)), h:Number(h.toFixed(1)), label:d.period.slice(-5), value:d.count, labelX:Number((x+barW/2).toFixed(1)), valueLabelY:Number((y-4).toFixed(1)), delay:(i*0.05).toFixed(2) };
+        return { x:Number(x.toFixed(1)), y:Number(y.toFixed(1)), w:Number(barW.toFixed(1)), h:Number(h.toFixed(1)), label: (() => { const p = d.period.split("-"); if(p[1] && p[1][0]==="S") return p[1]; const mi = Number(p[1])-1; const mn = FR_MONTHS[mi] || p[1]; return mn.length>4 ? mn.slice(0, mn==="juillet"?5:4)+"." : mn; })(), showLabel: taskStats.length<=7 || (taskStats.length-1-i)%2===0, value:d.count, labelX:Number((x+barW/2).toFixed(1)), valueLabelY:Number((y-4).toFixed(1)), delay:(i*0.05).toFixed(2) , left: ((x+barW/2)/320*100).toFixed(2)+"%", labelTop: (153/170*100).toFixed(2)+"%", valueTop: ((y-7)/170*100).toFixed(2)+"%" };
       });
     }
 
