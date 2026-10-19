@@ -247,7 +247,7 @@ a:hover{color:#1E3B7A;}
 </sc-if>
 
 <div style="display:flex;gap:8px;margin-top:8px">
-<input defaultValue="" data-kn-task-input="{{ cat.id }}" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ cat.onTaskInputChange }}" onKeyDown="{{ cat.onTaskInputKeyDown }}" placeholder="Nouvelle tâche…" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
+<input defaultValue="" data-kn-task-input="{{ cat.id }}" type="text" autoComplete="off" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ cat.onTaskInputChange }}" onKeyDown="{{ cat.onTaskInputKeyDown }}" placeholder="Nouvelle tâche…" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
 <button onClick="{{ cat.onAddTask }}" style="width:34px;height:34px;border-radius:12px;background:#0F1D4D;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
@@ -261,7 +261,7 @@ a:hover{color:#1E3B7A;}
 
 <sc-if value="{{ showAddCat }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;gap:8px;margin-top:8px;animation:kfFadeUp .3s ease both">
-<input defaultValue="" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ onNewCatChange }}" onKeyDown="{{ onNewCatKeyDown }}" placeholder="Nom de la catégorie…" autoFocus="{{ true }}" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
+<input defaultValue="" type="text" autoComplete="off" autoCapitalize="sentences" autoCorrect="on" spellCheck="true" enterKeyHint="done" onChange="{{ onNewCatChange }}" onKeyDown="{{ onNewCatKeyDown }}" placeholder="Nom de la catégorie…" autoFocus="{{ true }}" style="flex:1;font-size:14px;border-radius:12px;padding:8px 12px;border:1px solid #E3E7F3;color:#12204F;outline:none;box-sizing:border-box" />
 <button onClick="{{ onConfirmAddCat }}" style="width:34px;height:34px;border-radius:12px;background:#F5A623;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
 </button>
@@ -962,14 +962,20 @@ class Component extends DCLogic {
     const vv = window.visualViewport;
     if(!vv) return;
     const inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-    if(window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
+    const active = document.activeElement;
+    const typing = !!active && /^(INPUT|TEXTAREA)$/.test(active.tagName) && active.type !== "file";
+    // Never move the page while a word is being composed: iOS drops the predictive
+    // suggestion (and the space-to-accept) whenever script scrolls under the caret.
+    if(!typing && (window.scrollY || vv.offsetTop)) window.scrollTo(0, 0);
     const vvTop = Math.round(vv.offsetTop), vvH = Math.round(vv.height);
     if(inset === this.state.kbInset && vvTop === this.state.kbTop && vvH === this.state.kbVh) return;
-    if(inset <= 80) this._onViewportResize(); // keyboard gone: re-measure the real height
+    if(inset <= 80){ this._kbScrolledFor = null; this._onViewportResize(); }
     this.setState({ kbInset: inset, kbTop: vvTop, kbVh: vvH }, () => {
-      // once the layout has reflowed, bring the focused field back above the keyboard
+      // bring the focused field above the keyboard once per focus, not on every viewport tick
       const el = document.activeElement;
       if(inset <= 80 || !el || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+      if(this._kbScrolledFor === el) return;
+      this._kbScrolledFor = el;
       const box = el.getBoundingClientRect();
       const limit = vv.height - 24;
       if(box.bottom > limit){
