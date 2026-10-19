@@ -46,7 +46,7 @@ a{color:#0F1D4D;}
 a:hover{color:#1E3B7A;}
 </style>
 </helmet>
-<div style="min-height:{{ outerMinHeight }};display:flex;align-items:{{ wrapAlign }};justify-content:{{ wrapJustify }};background:{{ wrapBg }};padding:{{ wrapPadding }};box-sizing:border-box">
+<div style="position:{{ bandPosition }};top:{{ bandTop }};left:0;right:0;min-height:{{ outerMinHeight }};display:flex;align-items:{{ wrapAlign }};justify-content:{{ wrapJustify }};background:{{ wrapBg }};padding:{{ wrapPadding }};box-sizing:border-box">
 <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" bare="{{ isRealPhone }}" width="{{ frameWidth }}" height="{{ frameHeight }}" hint-size="402,874">
 
 <div style="width:100%;height:100%;display:flex;flex-direction:column;background:#F2F4FA;position:relative;overflow:hidden;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:#12204F">
@@ -956,12 +956,13 @@ class Component extends DCLogic {
   // sheet by that much, hide the tab bar while typing, and undo Safari's page shift.
   _kbUp = () => {
     const vv = window.visualViewport;
-    return !!vv && window.innerHeight - vv.height - vv.offsetTop > 80;
+    return !!vv && window.innerHeight - vv.height > 80;
   };
   _onKeyboard = () => {
     const vv = window.visualViewport;
     if(!vv) return;
-    const inset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    // keyboard height = layout viewport minus visible band, whatever iOS has panned (offsetTop)
+    const inset = Math.max(0, Math.round(window.innerHeight - vv.height));
     const active = document.activeElement;
     const typing = !!active && /^(INPUT|TEXTAREA)$/.test(active.tagName) && active.type !== "file";
     // Never move the page while a word is being composed: iOS drops the predictive
@@ -977,7 +978,7 @@ class Component extends DCLogic {
       if(this._kbScrolledFor === el) return;
       this._kbScrolledFor = el;
       const box = el.getBoundingClientRect();
-      const limit = vv.height - 24;
+      const limit = vv.offsetTop + vv.height - 24;
       if(box.bottom > limit){
         const scroller = el.closest("[data-kn-scroll]") ||
           (el.parentElement && el.parentElement.closest("div[style*='overflow-y']"));
@@ -1414,13 +1415,15 @@ class Component extends DCLogic {
 
     return {
       isRealPhone: s.isRealPhone,
-      outerMinHeight: s.isRealPhone ? "100dvh" : "100vh",
+      outerMinHeight: s.isRealPhone ? (s.kbInset > 80 && s.kbVh ? s.kbVh + "px" : "100dvh") : "100vh",
       wrapAlign: s.isRealPhone ? "stretch" : "center",
       wrapJustify: s.isRealPhone ? "stretch" : "center",
       wrapBg: s.isRealPhone ? "#F2F4FA" : "#E9ECF5",
       wrapPadding: s.isRealPhone ? "0" : "40px 20px",
       frameWidth: s.isRealPhone ? s.vw : 402,
-      frameHeight: s.isRealPhone ? s.vh : 874,
+      frameHeight: s.isRealPhone ? (s.kbInset > 80 && s.kbVh ? s.kbVh : s.vh) : 874,
+      bandPosition: s.isRealPhone && s.kbInset > 80 ? "fixed" : "relative",
+      bandTop: s.isRealPhone && s.kbInset > 80 ? s.kbTop + "px" : "0",
       isHome: s.tab==="home", isSuivi: s.tab==="suivi", isHistorique: s.tab==="historique",
       headerEyebrow, headerTitle, todayHuman,
       heroTotalDisplay: s.animatedTotal, deltaText, statusColor: status.color,
@@ -1523,7 +1526,7 @@ class Component extends DCLogic {
       sheetPadBottom: s.kbInset > 80 ? "16px" : "calc(34px + env(safe-area-inset-bottom))",
       sheetMaxHeight: s.kbInset > 80 ? Math.max(220, s.kbVh - 16) + "px" : "74%",
       composeMinHeight: s.kbInset > 80 ? "84px" : "120px",
-      contentPadBottom: s.kbInset > 80 ? s.kbInset + 40 + "px" : "calc(128px + env(safe-area-inset-bottom))",
+      contentPadBottom: s.kbInset > 80 ? (s.isRealPhone ? "24px" : s.kbInset + 40 + "px") : "calc(128px + env(safe-area-inset-bottom))",
 
       syncNeedsConfig: !s.syncCfg,
       syncNeedsLogin: !!s.syncCfg && !s.syncEmail,
